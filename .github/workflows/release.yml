@@ -28,6 +28,11 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
 
+      - name: Git
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "CI"
+
       - name: Build
         run: ./.github/workflows/release-build.sh
 
