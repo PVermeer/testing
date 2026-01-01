@@ -800,7 +800,7 @@ fn create_flathub_release_pr(new_version: &Version) -> Result<()> {
     let pr_title = &format!(r#"--title="v{new_version}""#);
     let pr_body = &format!(r#"--body="Automatic release for {new_version}""#);
     let command = "gh";
-    let args = ["pr", "create", pr_title, pr_body, "--draft", "--dry-run"];
+    let args = ["pr", "create", pr_title, pr_body, "--draft"];
     let error_message = "Failed to create a new PR on flathub repo";
     match Command::new(command)
         .args(args)
