@@ -12,6 +12,8 @@ jobs:
           fetch-tags: true
           submodules: true
 
+      - uses: Swatinem/rust-cache@v2
+
       - name: Dependencies
         run: ./.github/workflows/release-deps.sh
 

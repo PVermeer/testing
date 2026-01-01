@@ -559,8 +559,8 @@ fn generate_cargo_sources() -> Result<()> {
             error!(
                 command = command,
                 work_dir = work_dir.to_string_lossy().to_string(),
-                error = error.to_string(),
-                error_message
+                error = %error.to_string(),
+                "Failed to run command"
             );
             bail!(error)
         }
@@ -569,8 +569,8 @@ fn generate_cargo_sources() -> Result<()> {
                 let error = utils::command::parse_output(&output.stderr);
                 error!(
                     command = command,
-                    args = args.join(" "),
-                    error = error,
+                    args = %args.join(" "),
+                    error = %error,
                     error_message,
                 );
                 bail!(error_message)
