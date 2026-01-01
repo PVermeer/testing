@@ -5,9 +5,9 @@ description = "Create Web Apps with ease"
 edition = { workspace = true }
 license = "GPL-3.0-only"
 authors = ["PVermeer"]
-repository = "https://github.com/pvermeer/web-app-hub"
-homepage = "https://github.com/pvermeer/web-app-hub"
-documentation = "https://github.com/pvermeer/web-app-hub"
+repository = "https://github.com/pvermeer/testing"
+homepage = "https://github.com/pvermeer/testing"
+documentation = "https://github.com/pvermeer/testing"
 
 [[bin]]
 name = "web-app-hub"
