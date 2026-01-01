@@ -9,7 +9,7 @@ jobs:
       contents: write
     env:
       CI: "true"
-      GH_TOKEN: ${{ secrets.GH_TOKEN }}
+      GH_TOKEN: ${{secrets.FLATHUB_GH_TOKEN}}
       PACKAGES: ""
 
     steps:
