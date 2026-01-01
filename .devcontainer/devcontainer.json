@@ -1,0 +1,45 @@
+// For format details, see https://aka.ms/devcontainer.json.
+{
+	"name": "Fedora",
+	"build": {
+		"dockerfile": "Dockerfile"
+	},
+	"features": {
+		"ghcr.io/devcontainers/features/common-utils:2": {
+			"installZsh": "false",
+			"username": "vscode",
+			"userUid": "1000",
+			"userGid": "1000",
+			"upgradePackages": "false"
+		}
+	},
+	"runArgs": [
+		"--privileged", // Unsecure but allows flatpak install
+		"--device=/dev/dri",
+		"--network=host", // If network is slow in container
+		"--device=/dev/fuse"
+	],
+	"containerEnv": {
+		"RUN_IN_VSCODE_DEVCONTAINER": "true",
+		"DISPLAY": "${localEnv:DISPLAY}"
+	},
+	"mounts": [],
+	"postCreateCommand": "sudo dnf install -y chromium firefox && flatpak --user install -y org.flatpak.Builder com.github.tchx84.Flatseal com.brave.Browser org.chromium.Chromium io.github.ungoogled_software.ungoogled_chromium com.google.Chrome org.gnome.Epiphany com.vivaldi.Vivaldi com.opera.Opera org.mozilla.firefox one.ablaze.floorp",
+	"postStartCommand": "sudo dnf update -y && (rustup update || (rustup toolchain uninstall stable && rustup toolchain install stable)) && flatpak --user update -y && git submodule update --init --recursive",
+	"initializeCommand": "xhost +local:docker", // Allow x11 from docker
+	"remoteUser": "vscode",
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"rust-lang.rust-analyzer",
+				"vadimcn.vscode-lldb",
+				"tamasfe.even-better-toml",
+				"redhat.vscode-yaml",
+				"timonwong.shellcheck",
+				"redhat.vscode-xml",
+				"lumirelle.shell-format-rev",
+				"esbenp.prettier-vscode"
+			]
+		}
+	}
+}

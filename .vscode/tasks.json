@@ -1,0 +1,71 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "cargo",
+			"command": "build",
+			"args": [
+				"--release"
+			],
+			"problemMatcher": [
+				"$rustc"
+			],
+			"group": {
+				"kind": "build",
+				"isDefault": false
+			},
+			"label": "Build release"
+		},
+		{
+			"type": "shell",
+			"command": "WAH_LOG=debug ./target/release/web-app-hub",
+			"problemMatcher": [
+				"$rustc",
+			],
+			"group": {
+				"kind": "build",
+				"isDefault": false
+			},
+			"label": "Build and run release app",
+			"dependsOn": [
+				"Build release"
+			]
+		},
+		{
+			"type": "shell",
+			"command": "./flatpak/build.sh",
+			"problemMatcher": [
+				"$rustc",
+			],
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"label": "Build flatpak"
+		},
+		{
+			"type": "shell",
+			"command": "flatpak run --command=flatpak-builder-lint org.flatpak.Builder --exceptions manifest ./flatpak/org.pvermeer.WebAppHub.yml",
+			"problemMatcher": [
+				"$rustc",
+			],
+			"group": {
+				"kind": "test",
+				"isDefault": false
+			},
+			"label": "Lint flatpak release"
+		},
+		{
+			"type": "shell",
+			"command": "appstreamcli validate --no-net ./assets/desktop/org.pvermeer.WebAppHub.metainfo.xml",
+			"problemMatcher": [
+				"$rustc",
+			],
+			"group": {
+				"kind": "test",
+				"isDefault": false
+			},
+			"label": "Validate metainfo.xml"
+		},
+	]
+}

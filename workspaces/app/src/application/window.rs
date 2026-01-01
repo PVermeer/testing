@@ -1,0 +1,65 @@
+mod view;
+
+use crate::application::App;
+use common::config::{self, OnceLockExt};
+use gtk::License;
+use libadwaita::{
+    AboutDialog, ApplicationWindow,
+    gtk::prelude::GtkWindowExt,
+    prelude::{AdwApplicationWindowExt, AdwDialogExt},
+};
+use std::rc::Rc;
+use view::View;
+
+pub struct AppWindow {
+    pub adw_window: ApplicationWindow,
+    pub view: View,
+}
+impl AppWindow {
+    pub fn new(adw_application: &libadwaita::Application) -> Self {
+        let view = View::new();
+        let window = ApplicationWindow::builder()
+            .application(adw_application)
+            .title(config::APP_NAME.get_value())
+            .icon_name(config::APP_ID.get_value())
+            .default_height(775)
+            .default_width(900)
+            .content(&view.nav_split)
+            .build();
+
+        Self {
+            adw_window: window,
+            view,
+        }
+    }
+
+    pub fn init(&self, app: &Rc<App>) {
+        self.view.init(app);
+
+        self.adw_window.add_breakpoint(self.view.breakpoint.clone());
+        self.adw_window.present();
+    }
+
+    pub fn show_about(&self) {
+        let license = match config::LICENSE.get_value().as_str() {
+            "GPL-3.0" => License::Gpl30,
+            "GPL-3.0-only" => License::Gpl30Only,
+            _ => panic!("Could not convert license"),
+        };
+
+        let about = AboutDialog::builder()
+            .application_icon(config::APP_ID.get_value())
+            .application_name(config::APP_NAME.get_value())
+            .version(config::VERSION.get_value())
+            .developer_name(config::DEVELOPER.get_value())
+            .license_type(license)
+            .issue_url(config::ISSUES_URL.get_value())
+            .build();
+
+        about.present(Some(&self.adw_window));
+    }
+
+    pub fn close(&self) {
+        self.adw_window.close();
+    }
+}

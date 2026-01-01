@@ -1,0 +1,120 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug",
+      "env": {
+        // "RUST_BACKTRACE": "1",
+        "WAH_LOG": "debug",
+        "GSETTINGS_BACKEND": "memory"
+      },
+      "cargo": {
+        "args": [
+          "build",
+          "--bin=web-app-hub"
+        ],
+      },
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug release package",
+      "env": {
+        // "RUST_BACKTRACE": "1",
+        "WAH_LOG": "debug",
+        "GSETTINGS_BACKEND": "memory"
+      },
+      "cargo": {
+        "args": [
+          "build",
+          "--bin=release"
+        ],
+      },
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Flatpak run",
+      "env": {
+        "WAH_LOG": "debug",
+        "GSETTINGS_BACKEND": "memory"
+      },
+      "runtimeExecutable": "flatpak",
+      "runtimeArgs": [
+        "--user",
+        "run",
+        "--filesystem=/workspaces",
+        "org.pvermeer.WebAppHub"
+      ],
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Flatpak build and run",
+      "env": {
+        "WAH_LOG": "debug",
+        "GSETTINGS_BACKEND": "memory"
+      },
+      "runtimeExecutable": "flatpak",
+      "runtimeArgs": [
+        "--user",
+        "run",
+        "--filesystem=/workspaces",
+        "org.pvermeer.WebAppHub"
+      ],
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "preLaunchTask": "Build flatpak"
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Flatpak container",
+      "env": {
+        "WAH_LOG": "debug",
+        "RUST_BACKTRACE": "1",
+        "GSETTINGS_BACKEND": "memory",
+      },
+      "runtimeExecutable": "flatpak",
+      "runtimeArgs": [
+        "--user",
+        "run",
+        "--devel",
+        "--filesystem=/workspaces",
+        "--command=bash",
+        "org.pvermeer.WebAppHub"
+      ],
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug unit tests",
+      "env": {
+        "WAH_LOG": "debug",
+        "GSETTINGS_BACKEND": "memory"
+      },
+      "cargo": {
+        "args": [
+          "test",
+          "--no-run",
+          "--bins"
+        ],
+      },
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    }
+  ]
+}
