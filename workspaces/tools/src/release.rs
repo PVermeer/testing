@@ -450,7 +450,6 @@ fn create_app_metainfo_file(releases_xml: &str, new_version: &Version) -> Result
 
     let app_id = config::APP_ID.get_value();
     let app_name = config::APP_NAME.get_value();
-    let app_name_hyphen = config::APP_NAME_HYPHEN.get_value();
     let developer = config::DEVELOPER.get_value();
     let developer_id = &developer.to_lowercase();
     let app_summary = config::APP_SUMMARY.get_value();
@@ -459,8 +458,16 @@ fn create_app_metainfo_file(releases_xml: &str, new_version: &Version) -> Result
     let repository = config::REPOSITORY.get_value();
     let git_tag = format!("v{new_version}");
 
+    let mut repository_split = repository.split('/');
+    let repository_name = repository_split
+        .next_back()
+        .context("Failed split of repository name")?;
+    let repository_org = repository_split
+        .next_back()
+        .context("Failed split of repository org")?;
+
     let screenshot_base_url = &format!(
-        "https://raw.githubusercontent.com/{developer_id}/{app_name_hyphen}/refs/tags/{git_tag}/assets/screenshots"
+        "https://raw.githubusercontent.com/{repository_org}/{repository_name}/refs/tags/{git_tag}/assets/screenshots"
     );
     let mut i = 0;
     let screenshots = utils::files::get_entries_in_dir(&assets_screenshots_path())?
