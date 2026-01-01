@@ -686,6 +686,8 @@ fn build_release_flatpak() -> Result<()> {
 }
 
 fn validate_metainfo(offline: bool) -> Result<()> {
+    info!("==== Validating metainfo.xml (online: {})", !offline);
+
     let mut command = Command::new("appstreamcli");
     command.arg("validate");
     if offline {
