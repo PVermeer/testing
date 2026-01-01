@@ -456,7 +456,7 @@ fn create_app_metainfo_file(releases_xml: &str, new_version: &Version) -> Result
     let app_description = config::APP_DESCRIPTION.get_value();
     let license = config::LICENSE.get_value();
     let repository = config::REPOSITORY.get_value();
-    let git_tag = format!("v{new_version}");
+    let git_tag = &format!("v{new_version}");
 
     let mut repository_split = repository.split('/');
     let repository_name = repository_split
@@ -513,6 +513,7 @@ fn create_app_metainfo_file(releases_xml: &str, new_version: &Version) -> Result
     meta_data = meta_data.replace("%{repository}", repository);
     meta_data = meta_data.replace("%{screenshots}", &screenshots);
     meta_data = meta_data.replace("%{releases}", releases_xml);
+    meta_data = meta_data.replace("%{git_tag}", git_tag);
 
     let save_path = flatpak_metainfo_xml();
 
