@@ -17,6 +17,7 @@ jobs:
         with:
           fetch-tags: true
           submodules: true
+          fetch-depth: 0
           token: ${{env.GH_TOKEN}}
 
       - name: Dependencies
