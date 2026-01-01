@@ -4,21 +4,20 @@ on:
 
 jobs:
   release:
+    name: Release
     runs-on: ubuntu-latest
     permissions:
       contents: write
     env:
       CI: "true"
-      GH_TOKEN: ${{secrets.FLATHUB_TOKEN}}
       PACKAGES: ""
 
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-tags: true
-          submodules: true
+          submodules: false
           fetch-depth: 0
-          token: ${{env.GH_TOKEN}}
 
       - name: Dependencies
         run: |
@@ -30,19 +29,24 @@ jobs:
           packages: ${{env.PACKAGES}}
           run-update: true
 
-      - uses: Swatinem/rust-cache@v2
-
       - name: Git
         run: |
           git config --global user.email "action@github.com"
           git config --global user.name "CI"
+          git config --global url."https://${{ secrets.FLATHUB_TOKEN }}:@github.com/".insteadOf "https://github.com/"
+          git submodule sync --recursive
+          git submodule update --init --recursive
 
       - name: Flatpak
         run: |
           flatpak --user remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
 
+      - uses: Swatinem/rust-cache@v2
+
       - name: Build
         run: ./.github/workflows/release-build.sh
 
       - name: Release
+        env: 
+          GH_TOKEN: ${{ secrets.FLATHUB_TOKEN }}
         run: ./.github/workflows/release.sh
