@@ -35,7 +35,7 @@ jobs:
 
       - name: Flatpak
         run: |
-          flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+          flatpak --user remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
 
       - name: Build
         run: ./.github/workflows/release-build.sh
