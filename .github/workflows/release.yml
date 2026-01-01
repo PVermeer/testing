@@ -50,5 +50,5 @@ jobs:
 
       - name: Release
         env: 
-          GH_TOKEN: ${{ secrets.FLATHUB_TOKEN }}
+          FLATHUB_TOKEN: ${{ secrets.FLATHUB_TOKEN }}
         run: ./.github/workflows/release.sh

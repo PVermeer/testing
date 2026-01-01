@@ -81,9 +81,11 @@ fn dependency_check() -> Result<()> {
     println!("{}", output.stderr);
     println!("{}", output.stdout);
 
-    if std::env::var("GH_TOKEN").is_err() && command::run_command_sync("gh auth status").is_err() {
+    if std::env::var("FLATHUB_TOKEN").is_err()
+        && command::run_command_sync("gh auth status").is_err()
+    {
         missing_dependencies.push(
-            "Not logged in to github (gh command) or GH_TOKEN environment variable not defined",
+            "Not logged in to github (gh command) or FLATHUB_TOKEN environment variable not defined",
         );
     }
 
@@ -795,10 +797,14 @@ fn create_flathub_release_pr(new_version: &Version) -> Result<()> {
     fs::copy(cargo_sources, cargo_sources_flathub)?;
 
     let mut git_remote = format!("https://github.com/flathub/{app_id}.git");
-    if let Ok(github_token) = std::env::var("GH_TOKEN") {
+    if let Ok(github_token) = std::env::var("FLATHUB_TOKEN") {
+        println!("Using flathub token");
         git_remote = format!("https://{github_token}@github.com/flathub/{app_id}");
     } else if is_github_ssh_connected() {
         git_remote = format!("git@github.com:flathub/{app_id}");
+        println!("Using SSH");
+    } else {
+        println!("Using https");
     }
     let shell_script = &format!(
         r#"
