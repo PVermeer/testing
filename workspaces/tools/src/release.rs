@@ -766,6 +766,7 @@ fn create_flathub_release_pr(new_version: &Version) -> Result<()> {
     info!("==== Creating flathub release pr");
 
     let flathub_repo_dir = &flathub_repo();
+    let app_id = config::APP_ID.get_value();
 
     let shell_script = &format!(
         r#"
@@ -793,10 +794,9 @@ fn create_flathub_release_pr(new_version: &Version) -> Result<()> {
     fs::copy(flatpak_release_manifest, flatpak_release_manifest_flathub)?;
     fs::copy(cargo_sources, cargo_sources_flathub)?;
 
-    let mut git_remote = "origin";
-    if std::env::var("CI").is_err() {
-        // Use SSH connection
-        git_remote = "git@github.com:flathub/org.pvermeer.WebAppHub";
+    let mut git_remote = format!("https://github.com/flathub/{app_id}.git");
+    if is_github_ssh_connected() {
+        git_remote = format!("git@github.com:flathub/{app_id}");
     }
     let shell_script = &format!(
         r#"
@@ -809,35 +809,35 @@ fn create_flathub_release_pr(new_version: &Version) -> Result<()> {
     let error_message = "Failed to push new branch on flathub repo";
     run_shell_script(shell_script, flathub_repo_dir, error_message)?;
 
-    let pr_title = &format!("--title=v{new_version}");
-    let pr_body = &format!("--body=Automatic release for {new_version}");
-    let command = "gh";
-    let args = ["pr", "create", pr_title, pr_body, "--draft"];
-    let error_message = "Failed to create a new PR on flathub repo";
-    match Command::new(command)
-        .args(args)
-        .current_dir(flathub_repo_dir)
-        .stdout(Stdio::inherit())
-        .stderr(Stdio::inherit())
-        .output()
-    {
-        Err(error) => {
-            error!(command = command, error = %error.to_string(), error_message);
-            bail!(error)
-        }
-        Ok(output) => {
-            if !output.status.success() {
-                let error = utils::command::parse_output(&output.stderr);
-                error!(
-                    command = command,
-                    args = %args.join(" "),
-                    error = %error,
-                    error_message,
-                );
-                bail!(error_message.to_string())
-            }
-        }
-    }
+    // let pr_title = &format!("--title=v{new_version}");
+    // let pr_body = &format!("--body=Automatic release for {new_version}");
+    // let command = "gh";
+    // let args = ["pr", "create", pr_title, pr_body, "--draft"];
+    // let error_message = "Failed to create a new PR on flathub repo";
+    // match Command::new(command)
+    //     .args(args)
+    //     .current_dir(flathub_repo_dir)
+    //     .stdout(Stdio::inherit())
+    //     .stderr(Stdio::inherit())
+    //     .output()
+    // {
+    //     Err(error) => {
+    //         error!(command = command, error = %error.to_string(), error_message);
+    //         bail!(error)
+    //     }
+    //     Ok(output) => {
+    //         if !output.status.success() {
+    //             let error = utils::command::parse_output(&output.stderr);
+    //             error!(
+    //                 command = command,
+    //                 args = %args.join(" "),
+    //                 error = %error,
+    //                 error_message,
+    //             );
+    //             bail!(error_message.to_string())
+    //         }
+    //     }
+    // }
 
     info!("Created new release PR in flathub repo");
 
@@ -927,4 +927,10 @@ fn icon_file_name() -> String {
     let file_name = format!("{app_id}.{extension}");
 
     file_name
+}
+
+fn is_github_ssh_connected() -> bool {
+    command::run_command_sync("ssh -T git@github.com")
+        .map(|response| response.status == 1)
+        .unwrap_or(false)
 }

@@ -16,8 +16,9 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-tags: true
-          submodules: false
+          submodules: true
           fetch-depth: 0
+          token: ${{ secrets.FLATHUB_TOKEN }}
 
       - name: Dependencies
         run: |
@@ -33,9 +34,10 @@ jobs:
         run: |
           git config --global user.email "action@github.com"
           git config --global user.name "CI"
-          git config --global url."https://${{ secrets.FLATHUB_TOKEN }}:@github.com/".insteadOf "https://github.com/"
-          git submodule sync --recursive
-          git submodule update --init --recursive
+
+          # git config --global url."https://${{ secrets.FLATHUB_TOKEN }}:@github.com/".insteadOf "https://github.com/"
+          # git submodule sync --recursive
+          # git submodule update --init --recursive
 
       - name: Flatpak
         run: |
