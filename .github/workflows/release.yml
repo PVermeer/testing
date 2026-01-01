@@ -8,6 +8,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-tags: true
+          submodules: true
 
       - name: Dependencies
         run: ./.github/workflows/release-deps.sh
