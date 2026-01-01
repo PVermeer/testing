@@ -13,6 +13,4 @@ sudo apt-get install -y \
     libgtk-4-dev \
     libadwaita-1-dev
 
-cargo run --bin=release --locked
-
 echo -e "\n==== Done ====\n"
