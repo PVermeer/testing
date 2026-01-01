@@ -533,16 +533,16 @@ fn generate_cargo_sources() -> Result<()> {
     let shell_script = &format!(
         r#"
         set -e
-        echo -e "\nUpdating {sub_module_dir_path}\n"
+        echo -e "\n==Updating {sub_module_dir_path}\n"
         git checkout master
         git pull
-        echo -e "\nInstalling poetry\n"
+        echo -e "\n==Installing poetry\n"
         pipx install poetry
         poetry install
         eval "$(poetry env activate)"
-        echo -e "\nRunning flatpak-cargo-generator.py\n"
+        echo -e "\n==Running flatpak-cargo-generator.py\n"
         python3 flatpak-cargo-generator.py "{cargo_lock_path}" -o "{cargo_sources_path}"
-        echo ""
+        echo "== Done"
     "#
     );
 
@@ -553,6 +553,7 @@ fn generate_cargo_sources() -> Result<()> {
         .current_dir(work_dir)
         .args(args)
         .stdout(Stdio::inherit())
+        .stderr(Stdio::inherit())
         .output()
     {
         Err(error) => {
