@@ -4,6 +4,7 @@ set -e
 
 echo -e "\n==== Running release package ====\n"
 
+sudo apt-get update -y
 sudo apt-get install -y libglib2.0-dev
 cargo run --bin=release
 
