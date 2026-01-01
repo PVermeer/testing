@@ -153,13 +153,18 @@ fn generate_changelog() -> Result<(String, Version)> {
         .join("git-cliff.toml");
     let mut changelog = git_cliff::run(git_cliff_args.clone())?;
 
-    let Some(Ok(last_released_version)) = changelog.releases.last().and_then(|release| {
-        release
-            .version
-            .clone()
-            .map(|version| Version::parse(&version[1..]))
-    }) else {
-        bail!("No latest release version found in git");
+    let Ok(last_released_version) = changelog
+        .releases
+        .last()
+        .and_then(|release| {
+            release
+                .version
+                .clone()
+                .map(|version| Version::parse(&version[1..]))
+        })
+        .unwrap_or(Ok(Version::new(0, 0, 0)))
+    else {
+        bail!("Could not determine last released version from git");
     };
 
     let Some(Ok(new_release_version)) = changelog

@@ -9,5 +9,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Dependencies
+        run: ./.github/workflows/release-deps.sh
+
       - name: Release
         run: ./.github/workflows/release.sh
