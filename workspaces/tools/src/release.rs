@@ -774,13 +774,8 @@ fn create_flathub_release_pr(new_version: &Version) -> Result<()> {
     fs::copy(cargo_sources, cargo_sources_flathub)?;
 
     let flathub_token = std::env::var("FLATHUB_TOKEN").unwrap_or_default();
-    let mut git_remote = format!("https://github.com/flathub/{app_id}.git");
-    if !flathub_token.is_empty() {
-        println!("Using flathub token");
-        // git_remote = format!("https://{flathub_token}@github.com/flathub/{app_id}");
-
-        git_remote = format!("https://github.com/flathub/{app_id}.git");
-    } else if is_github_ssh_connected() {
+    let mut git_remote = String::from("origin");
+    if is_github_ssh_connected() {
         git_remote = format!("git@github.com:flathub/{app_id}");
         println!("Using SSH");
     } else {
