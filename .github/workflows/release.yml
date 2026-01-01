@@ -20,5 +20,5 @@ jobs:
       - name: Build
         run: ./.github/workflows/release-build.sh
 
-      - name: Release
-        run: ./.github/workflows/release.sh
+      # - name: Release
+      #   run: ./.github/workflows/release.sh
