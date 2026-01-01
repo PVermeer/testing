@@ -18,7 +18,7 @@ jobs:
           fetch-tags: true
           submodules: true
           fetch-depth: 0
-          token: ${{ secrets.TEST_TOKEN }}
+          token: ${{ secrets.FLATHUB_TOKEN }}
 
       - name: Dependencies
         run: |
@@ -35,10 +35,6 @@ jobs:
           git config --global user.email "action@github.com"
           git config --global user.name "CI"
 
-          # git config --global url."https://${{ secrets.FLATHUB_TOKEN }}:@github.com/".insteadOf "https://github.com/"
-          # git submodule sync --recursive
-          # git submodule update --init --recursive
-
       - name: Flatpak
         run: |
           flatpak --user remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
@@ -50,5 +46,5 @@ jobs:
 
       - name: Release
         env: 
-          FLATHUB_TOKEN: ${{ secrets.TEST_TOKEN }}
+          FLATHUB_TOKEN: ${{ secrets.FLATHUB_TOKEN }}
         run: ./.github/workflows/release.sh

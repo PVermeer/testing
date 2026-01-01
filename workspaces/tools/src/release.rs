@@ -47,11 +47,11 @@ fn main() -> Result<()> {
     let (releases_xml, new_version) = generate_changelog()?;
     update_cargo_with_new_version(&new_version)?;
     update_flatpak_manifest(&new_version)?;
-    // create_app_metainfo_file(&releases_xml, &new_version)?;
-    // generate_cargo_sources()?;
-    // create_release_in_git(&new_version)?;
-    // validate_metainfo(false)?;
-    // build_release_flatpak()?;
+    create_app_metainfo_file(&releases_xml, &new_version)?;
+    generate_cargo_sources()?;
+    create_release_in_git(&new_version)?;
+    validate_metainfo(false)?;
+    build_release_flatpak()?;
     create_flathub_release_pr(&new_version)?;
 
     info!("==== Finished release version {new_version}");
@@ -796,10 +796,11 @@ fn create_flathub_release_pr(new_version: &Version) -> Result<()> {
     fs::copy(flatpak_release_manifest, flatpak_release_manifest_flathub)?;
     fs::copy(cargo_sources, cargo_sources_flathub)?;
 
+    let flathub_token = std::env::var("FLATHUB_TOKEN").unwrap_or_default();
     let mut git_remote = format!("https://github.com/flathub/{app_id}.git");
-    if let Ok(github_token) = std::env::var("FLATHUB_TOKEN") {
+    if !flathub_token.is_empty() {
         println!("Using flathub token");
-        git_remote = format!("https://{github_token}@github.com/flathub/{app_id}");
+        git_remote = format!("https://{flathub_token}@github.com/flathub/{app_id}");
     } else if is_github_ssh_connected() {
         git_remote = format!("git@github.com:flathub/{app_id}");
         println!("Using SSH");
@@ -812,41 +813,43 @@ fn create_flathub_release_pr(new_version: &Version) -> Result<()> {
         set -e
         git commit -a -m "chore(automated-release): v{new_version}" || true 
         git push {git_remote} v{new_version}
+        git fetch
         echo ""
     "#
     );
     let error_message = "Failed to push new branch on flathub repo";
     run_shell_script(shell_script, flathub_repo_dir, error_message)?;
 
-    // let pr_title = &format!("--title=v{new_version}");
-    // let pr_body = &format!("--body=Automatic release for {new_version}");
-    // let command = "gh";
-    // let args = ["pr", "create", pr_title, pr_body, "--draft"];
-    // let error_message = "Failed to create a new PR on flathub repo";
-    // match Command::new(command)
-    //     .args(args)
-    //     .current_dir(flathub_repo_dir)
-    //     .stdout(Stdio::inherit())
-    //     .stderr(Stdio::inherit())
-    //     .output()
-    // {
-    //     Err(error) => {
-    //         error!(command = command, error = %error.to_string(), error_message);
-    //         bail!(error)
-    //     }
-    //     Ok(output) => {
-    //         if !output.status.success() {
-    //             let error = utils::command::parse_output(&output.stderr);
-    //             error!(
-    //                 command = command,
-    //                 args = %args.join(" "),
-    //                 error = %error,
-    //                 error_message,
-    //             );
-    //             bail!(error_message.to_string())
-    //         }
-    //     }
-    // }
+    let pr_title = &format!(r#"--title="v{new_version}""#);
+    let pr_body = &format!(r#"--body="Automatic release for {new_version}""#);
+    let command = "gh";
+    let args = ["pr", "create", pr_title, pr_body, "--draft", "--dry-run"];
+    let error_message = "Failed to create a new PR on flathub repo";
+    match Command::new(command)
+        .args(args)
+        .current_dir(flathub_repo_dir)
+        .env("GH_TOKEN", flathub_token)
+        .stdout(Stdio::inherit())
+        .stderr(Stdio::inherit())
+        .output()
+    {
+        Err(error) => {
+            error!(command = command, error = %error.to_string(), error_message);
+            bail!(error)
+        }
+        Ok(output) => {
+            if !output.status.success() {
+                let error = utils::command::parse_output(&output.stderr);
+                error!(
+                    command = command,
+                    args = %args.join(" "),
+                    error = %error,
+                    error_message,
+                );
+                bail!(error_message.to_string())
+            }
+        }
+    }
 
     info!("Created new release PR in flathub repo");
 
