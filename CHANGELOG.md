@@ -1,8 +1,17 @@
+## [0.0.6] - 2026-01-01
+
+### 🧪 Testing
+
+- Create draft
 ## [0.0.5] - 2026-01-01
 
 ### 🐛 Bug Fixes
 
 - *(ci)* Use git tag for readme link
+
+### ⚙️ Miscellaneous Tasks
+
+- *(release)* V0.0.5
 ## [0.0.4] - 2026-01-01
 
 ### 🐛 Bug Fixes
