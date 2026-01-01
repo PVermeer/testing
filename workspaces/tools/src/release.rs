@@ -48,9 +48,9 @@ fn main() -> Result<()> {
     update_cargo_with_new_version(&new_version)?;
     update_flatpak_manifest(&new_version)?;
     create_app_metainfo_file(&releases_xml, &new_version)?;
-    generate_cargo_sources()?;
-    create_release_in_git(&new_version)?;
-    validate_metainfo(false)?;
+    // generate_cargo_sources()?;
+    // create_release_in_git(&new_version)?;
+    // validate_metainfo(false)?;
     // build_release_flatpak()?;
     create_flathub_release_pr(&new_version)?;
 
