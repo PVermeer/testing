@@ -18,7 +18,7 @@ jobs:
           fetch-tags: true
           submodules: true
           fetch-depth: 0
-          token: ${{ secrets.FLATHUB_TOKEN }}
+          token: ${{ secrets.TEST_TOKEN }}
 
       - name: Dependencies
         run: |
@@ -50,5 +50,5 @@ jobs:
 
       - name: Release
         env: 
-          FLATHUB_TOKEN: ${{ secrets.FLATHUB_TOKEN }}
+          FLATHUB_TOKEN: ${{ secrets.TEST_TOKEN }}
         run: ./.github/workflows/release.sh

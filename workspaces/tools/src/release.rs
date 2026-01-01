@@ -806,6 +806,7 @@ fn create_flathub_release_pr(new_version: &Version) -> Result<()> {
     } else {
         println!("Using https");
     }
+
     let shell_script = &format!(
         r#"
         set -e
