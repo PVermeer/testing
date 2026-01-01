@@ -1,4 +1,4 @@
-use anyhow::{Result, bail};
+use anyhow::{Context, Result, bail};
 use chrono::DateTime;
 use clap::Parser;
 use common::{
@@ -51,7 +51,8 @@ fn main() -> Result<()> {
     generate_cargo_sources()?;
     create_release_in_git(&new_version)?;
     validate_metainfo(false)?;
-    build_release_flatpak()?;
+    // build_release_flatpak()?;
+    create_flathub_release_pr(&new_version)?;
 
     info!("==== Finished release version {new_version}");
 
@@ -59,7 +60,14 @@ fn main() -> Result<()> {
 }
 
 fn dependency_check() -> Result<()> {
-    let dependencies = ["git", "python3", "pipx", "flatpak-builder", "appstreamcli"];
+    let dependencies = [
+        "git",
+        "python3",
+        "pipx",
+        "flatpak-builder",
+        "appstreamcli",
+        "gh",
+    ];
     let mut missing_dependencies = Vec::new();
 
     for dep in dependencies {
@@ -67,6 +75,16 @@ fn dependency_check() -> Result<()> {
         if !has_dependency {
             missing_dependencies.push(dep);
         }
+    }
+
+    let output = command::run_command_sync("gh auth status")?;
+    println!("{}", output.stderr);
+    println!("{}", output.stdout);
+
+    if std::env::var("GH_TOKEN").is_err() && command::run_command_sync("gh auth status").is_err() {
+        missing_dependencies.push(
+            "Not logged in to github (gh command) or GH_TOKEN environment variable not defined",
+        );
     }
 
     if missing_dependencies.is_empty() {
@@ -78,7 +96,7 @@ fn dependency_check() -> Result<()> {
         println!("{missing_dep}");
     }
 
-    bail!("Missing some dependies")
+    bail!("Missing some dependencies")
 }
 
 fn create_app_desktop_file() -> Result<()> {
@@ -177,7 +195,7 @@ fn generate_changelog() -> Result<(String, Version)> {
         })?
         .map(|version| Version::parse(&version[1..]))
     else {
-        bail!("Failed to create a new semantic version")
+        bail!("Failed to create a new semantic version, no new changes?")
     };
 
     info!(
@@ -510,8 +528,10 @@ fn create_app_metainfo_file(releases_xml: &str, new_version: &Version) -> Result
 fn generate_cargo_sources() -> Result<()> {
     info!("==== Generating cargo sources");
 
-    let sub_module_dir = &Path::new("external").join("flatpak-builder-tools");
-    let work_dir = &sub_module_dir.join("cargo").canonicalize()?;
+    let sub_module_dir = &project_path()
+        .join("external")
+        .join("flatpak-builder-tools");
+    let work_dir = &sub_module_dir.join("cargo");
     let project_root_from_work_dir = &Path::new(work_dir)
         .join("..")
         .join("..")
@@ -711,6 +731,119 @@ fn validate_metainfo(offline: bool) -> Result<()> {
     }
 }
 
+fn create_flathub_release_pr(new_version: &Version) -> Result<()> {
+    fn run_shell_script(shell_script: &str, work_dir: &Path, error_message: &str) -> Result<()> {
+        let command = "sh";
+        let args = &["-c", shell_script];
+
+        match Command::new(command)
+            .args(args)
+            .current_dir(work_dir)
+            .stdout(Stdio::inherit())
+            .stderr(Stdio::inherit())
+            .output()
+        {
+            Err(error) => {
+                error!(command = command, error = %error.to_string(), error_message);
+                bail!(error)
+            }
+            Ok(output) => {
+                if !output.status.success() {
+                    let error = utils::command::parse_output(&output.stderr);
+                    error!(
+                        command = command,
+                        args = %args.join(" "),
+                        error = %error,
+                        error_message,
+                    );
+                    bail!(error_message.to_string())
+                }
+                Ok(())
+            }
+        }
+    }
+
+    info!("==== Creating flathub release pr");
+
+    let flathub_repo_dir = &flathub_repo();
+
+    let shell_script = &format!(
+        r#"
+        set -e
+        git checkout -b v{new_version}
+        echo ""
+    "#
+    );
+    let error_message = "Failed to create new branch on flathub repo";
+    run_shell_script(shell_script, flathub_repo_dir, error_message)?;
+
+    let flatpak_release_manifest = &flatpak_release_manifest();
+    let flatpak_release_manifest_flathub = flathub_repo_dir.join(
+        flatpak_release_manifest
+            .file_name()
+            .context("No filename on flatpak manifest???")?,
+    );
+    let cargo_sources = flatpak_cargo_sources();
+    let cargo_sources_flathub = flathub_repo_dir.join(
+        cargo_sources
+            .file_name()
+            .context("No filename on cargo sources???")?,
+    );
+
+    fs::copy(flatpak_release_manifest, flatpak_release_manifest_flathub)?;
+    fs::copy(cargo_sources, cargo_sources_flathub)?;
+
+    let mut git_remote = "origin";
+    if std::env::var("CI").is_err() {
+        // Use SSH connection
+        git_remote = "git@github.com:flathub/org.pvermeer.WebAppHub";
+    }
+    let shell_script = &format!(
+        r#"
+        set -e
+        git commit -a -m "chore(automated-release): v{new_version}" || true 
+        git push {git_remote} v{new_version}
+        echo ""
+    "#
+    );
+    let error_message = "Failed to push new branch on flathub repo";
+    run_shell_script(shell_script, flathub_repo_dir, error_message)?;
+
+    let pr_title = &format!("--title=v{new_version}");
+    let pr_body = &format!("--body=Automatic release for {new_version}");
+    let command = "gh";
+    let args = ["pr", "create", pr_title, pr_body, "--draft"];
+    let error_message = "Failed to create a new PR on flathub repo";
+    match Command::new(command)
+        .args(args)
+        .current_dir(flathub_repo_dir)
+        .stdout(Stdio::inherit())
+        .stderr(Stdio::inherit())
+        .output()
+    {
+        Err(error) => {
+            error!(command = command, error = %error.to_string(), error_message);
+            bail!(error)
+        }
+        Ok(output) => {
+            if !output.status.success() {
+                let error = utils::command::parse_output(&output.stderr);
+                error!(
+                    command = command,
+                    args = %args.join(" "),
+                    error = %error,
+                    error_message,
+                );
+                bail!(error_message.to_string())
+            }
+        }
+    }
+
+    info!("Created new release PR in flathub repo");
+
+    Ok(())
+}
+
 fn project_path() -> PathBuf {
     Path::new(".").canonicalize().unwrap()
 }
@@ -769,6 +902,15 @@ fn flatpak_dev_manifest() -> PathBuf {
 fn flatpak_metainfo_xml() -> PathBuf {
     let app_id = config::APP_ID.get_value();
     assets_desktop_path().join(format!("{app_id}.metainfo.xml"))
+}
+
+fn flatpak_cargo_sources() -> PathBuf {
+    flatpak_path().join("cargo-sources.json")
+}
+
+fn flathub_repo() -> PathBuf {
+    let app_id = config::APP_ID.get_value();
+    project_path().join("external").join(app_id)
 }
 
 fn desktop_file_name() -> String {

@@ -8,6 +8,8 @@ jobs:
     permissions:
       contents: write
     env:
+      CI: "true"
+      GH_TOKEN: ${{ github.token }}
       PACKAGES: ""
 
     steps:

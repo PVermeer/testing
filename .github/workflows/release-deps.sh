@@ -4,6 +4,7 @@ set -e
 
 export packages="\
     flatpak-builder \
+    gh \
     build-essential \
     libglib2.0-dev \
     libgtk-4-dev \
