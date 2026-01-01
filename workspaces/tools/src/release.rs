@@ -734,37 +734,6 @@ fn validate_metainfo(offline: bool) -> Result<()> {
 }
 
 fn create_flathub_release_pr(new_version: &Version) -> Result<()> {
-    fn run_shell_script(shell_script: &str, work_dir: &Path, error_message: &str) -> Result<()> {
-        let command = "sh";
-        let args = &["-c", shell_script];
-
-        match Command::new(command)
-            .args(args)
-            .current_dir(work_dir)
-            .stdout(Stdio::inherit())
-            .stderr(Stdio::inherit())
-            .output()
-        {
-            Err(error) => {
-                error!(command = command, error = %error.to_string(), error_message);
-                bail!(error)
-            }
-            Ok(output) => {
-                if !output.status.success() {
-                    let error = utils::command::parse_output(&output.stderr);
-                    error!(
-                        command = command,
-                        args = %args.join(" "),
-                        error = %error,
-                        error_message,
-                    );
-                    bail!(error_message.to_string())
-                }
-                Ok(())
-            }
-        }
-    }
-
     info!("==== Creating flathub release pr");
 
     let flathub_repo_dir = &flathub_repo();
@@ -945,4 +914,35 @@ fn is_github_ssh_connected() -> bool {
     command::run_command_sync("ssh -T git@github.com")
         .map(|response| response.status == 1)
         .unwrap_or(false)
+}
+
+fn run_shell_script(shell_script: &str, work_dir: &Path, error_message: &str) -> Result<()> {
+    let command = "sh";
+    let args = &["-c", shell_script];
+
+    match Command::new(command)
+        .args(args)
+        .current_dir(work_dir)
+        .stdout(Stdio::inherit())
+        .stderr(Stdio::inherit())
+        .output()
+    {
+        Err(error) => {
+            error!(command = command, error = %error.to_string(), error_message);
+            bail!(error)
+        }
+        Ok(output) => {
+            if !output.status.success() {
+                let error = utils::command::parse_output(&output.stderr);
+                error!(
+                    command = command,
+                    args = %args.join(" "),
+                    error = %error,
+                    error_message,
+                );
+                bail!(error_message.to_string())
+            }
+            Ok(())
+        }
+    }
 }
