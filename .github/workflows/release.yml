@@ -22,6 +22,7 @@ jobs:
       - uses: rishabhc32/apt-package-cache@v1.0.1
         with:
           packages: ${{env.PACKAGES}}
+          run-update: true
 
       - uses: Swatinem/rust-cache@v2
 
