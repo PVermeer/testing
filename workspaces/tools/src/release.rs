@@ -45,13 +45,13 @@ fn main() -> Result<()> {
     create_app_icon()?;
 
     let (releases_xml, new_version) = generate_changelog()?;
-    update_cargo_with_new_version(&new_version)?;
-    update_flatpak_manifest(&new_version)?;
-    create_app_metainfo_file(&releases_xml, &new_version)?;
-    generate_cargo_sources()?;
-    create_release_in_git(&new_version)?;
-    validate_metainfo(false)?;
-    build_release_flatpak()?;
+    // update_cargo_with_new_version(&new_version)?;
+    // update_flatpak_manifest(&new_version)?;
+    // create_app_metainfo_file(&releases_xml, &new_version)?;
+    // generate_cargo_sources()?;
+    // create_release_in_git(&new_version)?;
+    // validate_metainfo(false)?;
+    // build_release_flatpak()?;
     create_flathub_release_pr(&new_version)?;
 
     info!("==== Finished release version {new_version}");
@@ -777,7 +777,9 @@ fn create_flathub_release_pr(new_version: &Version) -> Result<()> {
     let mut git_remote = format!("https://github.com/flathub/{app_id}.git");
     if !flathub_token.is_empty() {
         println!("Using flathub token");
-        git_remote = format!("https://{flathub_token}@github.com/flathub/{app_id}");
+        // git_remote = format!("https://{flathub_token}@github.com/flathub/{app_id}");
+
+        git_remote = format!("https://github.com/flathub/{app_id}.git");
     } else if is_github_ssh_connected() {
         git_remote = format!("git@github.com:flathub/{app_id}");
         println!("Using SSH");
@@ -800,7 +802,7 @@ fn create_flathub_release_pr(new_version: &Version) -> Result<()> {
     let pr_title = &format!(r#"--title="v{new_version}""#);
     let pr_body = &format!(r#"--body="Automatic release for {new_version}""#);
     let command = "gh";
-    let args = ["pr", "create", pr_title, pr_body, "--draft"];
+    let args = ["pr", "create", pr_title, pr_body, "--draft", "--dry-run"];
     let error_message = "Failed to create a new PR on flathub repo";
     match Command::new(command)
         .args(args)
