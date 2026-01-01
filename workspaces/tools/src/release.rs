@@ -47,7 +47,7 @@ fn main() -> Result<()> {
     let (releases_xml, new_version) = generate_changelog()?;
     update_cargo_with_new_version(&new_version)?;
     update_flatpak_manifest(&new_version)?;
-    create_app_metainfo_file(&releases_xml, &new_version)?;
+    // create_app_metainfo_file(&releases_xml, &new_version)?;
     // generate_cargo_sources()?;
     // create_release_in_git(&new_version)?;
     // validate_metainfo(false)?;
@@ -795,7 +795,9 @@ fn create_flathub_release_pr(new_version: &Version) -> Result<()> {
     fs::copy(cargo_sources, cargo_sources_flathub)?;
 
     let mut git_remote = format!("https://github.com/flathub/{app_id}.git");
-    if is_github_ssh_connected() {
+    if let Ok(github_token) = std::env::var("GH_TOKEN") {
+        git_remote = format!("https://{github_token}@github.com/flathub/{app_id}");
+    } else if is_github_ssh_connected() {
         git_remote = format!("git@github.com:flathub/{app_id}");
     }
     let shell_script = &format!(
