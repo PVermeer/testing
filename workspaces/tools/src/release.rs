@@ -612,10 +612,11 @@ fn create_release_in_git(new_version: &Version) -> Result<()> {
     match Command::new(command)
         .args(args)
         .stdout(Stdio::inherit())
+        .stderr(Stdio::inherit())
         .output()
     {
         Err(error) => {
-            error!(command = command, error = error.to_string(), error_message);
+            error!(command = command, error = %error.to_string(), error_message);
             bail!(error)
         }
         Ok(output) => {
@@ -623,8 +624,8 @@ fn create_release_in_git(new_version: &Version) -> Result<()> {
                 let error = utils::command::parse_output(&output.stderr);
                 error!(
                     command = command,
-                    args = args.join(" "),
-                    error = error,
+                    args = %args.join(" "),
+                    error = %error,
                     error_message,
                 );
                 bail!(error_message)
